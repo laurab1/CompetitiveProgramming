@@ -11,7 +11,7 @@ void print(vector<int> vec) {
     cout << endl;
 }
 
-int min_even(string vec) {
+int last_el(string vec) {
     size_t size = vec.size();
     int min;
     int min_odd;
@@ -54,11 +54,11 @@ int main() {
     for(size_t i=0; i<t; i++) {
         int num_len = (numbers.at(i)).length();
         //cout << "num_len is " << num_len << endl;
-        int local_min = min_even(numbers[i]);
+        int local_min = last_el(numbers[i]);
         //cout << "local_min is " << local_min << endl; 
         nums.at(i) = vector<int>(num_len);
         int k = 0;
-        bool found = false; //false 'til I find the min even number for the first time
+        bool found = false; //false 'til I find the min for the first time
         for(size_t j=0; j<num_len; j++) {
             int current = (numbers.at(i)).at(j) - 48;
             if(current == local_min && !found) {
@@ -69,11 +69,11 @@ int main() {
             }
         }
         nums.at(i).at(num_len-1) = local_min;
-        //print(nums.at(i));
     }
 
     for(size_t i=0; i<t; i++) {
         int len = nums.at(i).size();
+        //here we use the standard c++ sort, can be linear by using counting sort
         sort((nums.at(i)).begin(), nums.at(i).end()-1, greater <int>());
         print(nums.at(i));
     }
