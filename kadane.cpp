@@ -1,42 +1,42 @@
 #include <iostream>
-using namespace std;
+#include <vector>
 
-typedef struct test_struct {
+typedef struct test {
     int size;
-    int* array;
+    std::vector<int> vec;
 } test_t;
 
 void kadane(test_t test) {
-    int sum = 0;
-    int max = test.array[0];
+    int sum = test.vec.front();
+    int max = test.vec.front();
 
-    for(int i=0; i<test.size; i++) {
+    for(auto it = test.vec.begin()+1; it != test.vec.end(); it++) {
         //if sum is positive, then add next element to it
         //else restart from current element
-        sum = sum>0?(sum+test.array[i]):test.array[i];
-        max = sum>max?sum:max;
+        sum = sum>=0?(sum+*it):*it;
+        max = sum>=max?sum:max;
     }
 
-    cout << max << endl;
+    std::cout << max << std::endl;
 }
 
 int main() {
-    int t;
-    cin >> t; //gets number of test cases
-    test_t* tests = (test_t*) malloc(t*sizeof(test_t));
+    int num_tests;
+    std::cin >> num_tests; //gets number of test cases
+    std::vector<test_t> tests(num_tests);
     //gets test cases: size of arrays and arrays' elements
-    for(int i=0; i<t; i++) {
-        cin >> tests[i].size;
-        tests[i].array = (int*) malloc(tests[i].size*sizeof(int));
-        for(int j=0; j<tests[i].size; j++)
-            cin >> tests[i].array[j];
+    for(auto it = tests.begin(); it != tests.end(); it++) {
+        std::cin >> it->size;
+        int el;
+        for(int i=0; i<it->size; i++) {
+            std::cin >> el;
+            it->vec.push_back(el);
+        }
     }
     //for each array, performs kadane's algo
-    for(int i=0; i<t; i++) {
-        kadane(tests[i]);
-        free(tests[i].array);
+    for(auto it = tests.begin(); it != tests.end(); it++) {
+        kadane(*it);
     }
-    free(tests);
 
     return 0;
 }
