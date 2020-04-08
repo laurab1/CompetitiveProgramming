@@ -2,4 +2,4 @@
 
 | Lecture       | Problems      |
 | ------------- | ------------- |
-| Introduction  | Leaders in an array ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/leaders2.cpp))<br/> Kadane's algorithm ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/kadane.cpp)) |
+| Introduction  | Leaders in array ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/leaders2.cpp))<br/> Kadane's algorithm ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/kadane.cpp))<br/> Missing number in array ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/missing_num.cpp)) |
