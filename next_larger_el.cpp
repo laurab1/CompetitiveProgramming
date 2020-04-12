@@ -1,61 +1,49 @@
 #include <iostream>
 #include <stack>
-using namespace std;
+#include <vector>
 
 typedef struct test_struct {
     int size; //size of the array
-    int* array; //array of integers
+    std::vector<long> vec; //vector of integers
 } test_t;
 
 void next_larger_el(test_t test) {
-    //not exactly like sliding window max: uses a stack instead
-    stack<int> st;
-    int a[test.size]; //array of results
-    int j = test.size-1;
-
-    //initialise the array of results to -1
-    for(int i=0; i<test.size; i++)
-        a[i] = -1;
+    std::stack<long> st;
+    int size = test.vec.size();
+    std::vector<long> results(size); //array of results
 
     //reads the array from right to left
-    for(int i=test.size-1; i>=0; i--) {
-        while(!st.empty()) {
-            //if there is at least an element on the stack, checks if it's
-            //greater than the current element. If it is, inserts it in a.
-            if(st.top()>test.array[i]) {
-                a[i] = st.top();
-                break;
-            }
-            //stack top is not greater than the larger element, I can remove it
+    for(int i = size-1; i>=0; i--) {
+        while(!st.empty() && test.vec.at(i) >= st.top())
             st.pop();
-        }
-        //inserts the current element on the stack
-        st.push(test.array[i]);
+
+        results.at(i) = st.empty()?-1:st.top();
+
+        st.push(test.vec.at(i));
     }
 
     //prints the results
-    for(int i=0; i<test.size; i++)
-        cout << a[i] << " ";
+    for(auto it = results.begin(); it != results.end(); it++)
+        std::cout << *it << " ";
 
-    cout << endl;
+    std::cout << std::endl;
 }
 
 int main() {
-    int t;
-    cin >> t; //gets the number of test cases and create an array of tests
-    test_t* tests = (test_t*) malloc(t*sizeof(test_t));
-    for(int i=0; i<t; i++) {
-        cin >> tests[i].size; //gets size of the array
-        tests[i].array = (int*) malloc(tests[i].size*sizeof(int));
-        for(int j=0; j<tests[i].size; j++)
-            cin >> tests[i].array[j]; //gets the elements of the array
+    int num_tests;
+    std::cin >> num_tests;
+    std::vector<test_t> tests(num_tests);
+    for(auto it = tests.begin(); it != tests.end(); it++) {
+        std::cin >> it->size;
+        long num;
+        for(int j=0; j<it->size; j++) {
+            std::cin >> num;
+            it->vec.push_back(num);
+        }
     }
 
-    for(int i=0; i<t; i++) {
-        next_larger_el(tests[i]); //compute the sliding window maximums
-        free(tests[i].array);
-    }
-    free(tests);
+    for(auto it = tests.begin(); it != tests.end(); it++)
+        next_larger_el(*it);
 
     return 0;
 }
