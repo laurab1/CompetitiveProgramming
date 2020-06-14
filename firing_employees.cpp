@@ -1,27 +1,12 @@
 #include <iostream>
 #include <vector>
-#include <functional>
-#include <algorithm>
+#include <stack>
 #include <math.h>
-using namespace std;
 
-//node of the tree
-typedef struct node {
-    int rnk;
-    int superior;
-    int sum; //number of superiors
-    bool checked = false;
-    node* parent;
-    vector<node*> children;
-    node(int r, int s) : rnk(r), superior(s), sum(0) {}
-
-    //overload of the greater() operator:
-    //needed to sort employees in descending order w.r.t their superior
-    bool operator > (const node& str) const
-    {
-        return (superior > str.superior);
-    }
-} node_t;
+typedef struct test_struct {
+    int size;
+    std::vector<int> vec;
+} test_t;
 
 bool is_prime(int num) {
     for(int i=2; i<=sqrt(num); i++)
@@ -30,47 +15,50 @@ bool is_prime(int num) {
     return true;
 }
 
+void black_listed(test_t test) {
+    std::vector<std::vector<int>> pos;
+    for(int i=0; i<test.vec.size()+1; i++) {
+        pos.push_back(std::vector<int>(1, i+1));
+    }
+    
+    std::stack<int> stack;
+    std::vector<int> sen;
+    for(int i=0; i<test.vec.size()+1; i++)
+        sen.push_back(0);
+    stack.push(pos.at(0).front());
+    for(int i=0; i<test.vec.size(); i++) {
+        std::vector<int> tmp = pos[stack.top()];
+        std::cout << "ok" << std::endl;
+        stack.pop();
+        for(auto it = tmp.begin(); it != tmp.end(); it++) {
+            sen[*it] = 1+ sen[test.vec.at(*it-1)];
+            stack.push(*it);
+        }
+    }
+    
+    int fired = 0;
+    for(int i=0; i<test.vec.size(); i++)
+        if(sen.at(i) && is_prime(sen.at(i) + i))
+            fired += 1;
+
+    std::cout << fired << std::endl;
+}
+
 int main() {
-    int t;
-    cin >> t;
-    vector<vector<int>> tests(t);
-    for(size_t i=0; i<t; i++) {
-        int n = 0;
-        cin >> n;
-        tests.at(i) = vector<int>(n);
-        for(int j=0; j<n; j++) {
-            int sup_rnk = 0;
-            cin >> sup_rnk;
-            tests.at(i).at(j) = sup_rnk;
+    int num_tests;
+    std::cin >> num_tests;
+    std::vector<test_t> tests(num_tests);
+    for(auto it = tests.begin(); it != tests.end(); it++) {
+        std::cin >> it->size;
+        long num;
+        for(int j = 0; j < it->size; j++) {
+            std::cin >> num;
+            it->vec.push_back(num);
         }
     }
-    for(size_t i=0; i<t; i++) {
-        int black_listed = 0;
-        vector<node_t> employees;
-        for(size_t j=0; j<tests.at(i).size(); j++) {
-            employees.push_back(node_t(j+1, tests.at(i).at(j)));
-        }
-        size_t n = employees.size();
-        sort(employees.begin(), employees.end(), greater<node_t>());
-        for(size_t j=0; j<n; j++) { //build a tree
-            int sup_j = employees.at(j).superior;
-            if(sup_j == 0)
-                employees.at(j).parent = nullptr; //Mr. Alfred is the root
-            else {
-                employees.at(j).parent = &(employees.at(sup_j-1));
-                employees.at(j).parent->children.push_back(&employees.at(j));
-            }
-        }
-        for(size_t i=n-1; i>0; i--) {
-            auto emp = employees.at(i);
-            for(size_t j = 0; j<emp.children.size(); j++) {
-                emp.children.at(j)->sum = emp.sum + 1;
-                int check = emp.children.at(j)->rnk + emp.children.at(j)->sum;
-                if(!emp.children.at(j)->checked && is_prime(check))
-                    black_listed++;
-                emp.children.at(j)->checked = true;
-            }
-        }
-        std::cout << black_listed << endl;
-    }
+
+    for(auto it = tests.begin(); it != tests.end(); it++)
+        black_listed(*it);
+
+    return 0;
 }
