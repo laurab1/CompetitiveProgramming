@@ -1,72 +1,70 @@
-#include <iostream>
-#include <vector>
+#include<iostream> 
 
-typedef struct test_struct {
-    int size;
-    std::vector<long> vec;
-} test_t;
+long inversions;
 
-int merge(std::vector<long>& a, int l, int c, int r) { 
-    int i = l;
-    int j = c + 1;
-    int n = 1 + (r-l);
-    std::vector<long> aux(n);
-    size_t k = 0;
-    uint64_t n_invs = 0;
-    
-    while((i <= c) && (j <= r)) {
-      if(a[i] < a[j]) {
-        aux[k++] = a[i++];
-      } else {
-        aux[k++] = a[j++];
-        n_invs += c-i+1;
-      }
-    }
-    
-    while(i <= c) {
-      aux[k++] = a[i++];
-    }
-    
-    while(j <= r) {
-      aux[k++] = a[j++];
-    }
+void merge(long arr[], int left, int center, int right) { 
+	int i, j, k; 
+	int n1 = center - left + 1;
+	int n2 = right - center; 
 
-    auto jt = a.begin() + l;
-    for(auto it = aux.begin(); it != aux.end(); it++)
-        *jt++ = *it;
-    
-    return n_invs;
-}
+	long L[n1], R[n2]; 
 
-int count_mergesort(std::vector<long>& vec, int l, int r) 
-{ 
-    if(l >= r)
-        return 0;
-    int c = (l+r)/2; 
-    int left_invs = count_mergesort(vec, l, c); 
-    int right_invs = count_mergesort(vec, c+1, r);
-    return left_invs + right_invs + merge(vec, l, c, r);;
+	for (i = 0; i < n1; i++) 
+		L[i] = arr[left + i]; 
+	for (j = 0; j < n2; j++) 
+		R[j] = arr[center + 1+ j]; 
+
+	i = 0; 
+	j = 0;
+	k = left;  
+
+	while (i < n1 && j < n2) { 
+		if (L[i] <= R[j]) { 
+			arr[k++] = L[i++]; 
+		} 
+		else
+		{   
+      inversions += n1 - i;
+			arr[k++] = R[j++]; 
+		} 
+	} 
+
+	while (i < n1) 
+	{ 
+		arr[k++] = L[i++];
+	} 
+
+	while (j < n2) 
+	{ 
+		arr[k++] = R[j++]; 
+	} 
 } 
-void inversion_count(test_t test) {
-    int inversions = count_mergesort(test.vec,0,test.size);
-    std::cout << inversions << std::endl;
+
+void merge_sort(long arr[], int left, int right) { 
+	if (left < right) { 
+		
+		int center = left + (right - left)/2; 
+
+		merge_sort(arr, left, center); 
+		merge_sort(arr, center + 1, right); 
+
+		merge(arr, left, center, right); 
+	} 
 }
 
-int main() {
+int main() { 
     int num_tests;
     std::cin >> num_tests;
-    std::vector<test_t> tests(num_tests);
-    for(auto it = tests.begin(); it != tests.end(); it++) {
-        std::cin >> it->size;
-        long num;
-        for(int j = 0; j < it->size; j++) {
-            std::cin >> num;
-            it->vec.push_back(num);
+    for(int i = 0; i < num_tests; i++) {
+        int size;
+        std::cin >> size;
+        long arr[size];
+        for(int j = 0; j < size; j++){
+            std::cin >> arr[j];
         }
+        inversions=0;
+        merge_sort(arr, 0, size-1);
+        std::cout << inversions << std::endl;
     }
-
-    for(auto it = tests.begin(); it != tests.end(); it++)
-        inversion_count(*it);
-
-    return 0;
-}
+	return 0; 
+} 
