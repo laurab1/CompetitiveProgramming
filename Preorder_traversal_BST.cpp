@@ -1,24 +1,37 @@
 #include <vector>
+#include <stack>
 #include <iostream>
 
-//a single testcase
-typedef struct test {
-    int n; //length of the vector
-    std::vector<int> vec; //vector of integers
-} test_t;
+int check_preorder(std::vector<int> vec) {
+    std::stack<int> s;
+    int root = INT32_MIN;
+
+    for(auto it = vec.begin(); it != vec.end(); it++) {
+        if(*it < root) 
+            return 0;
+        while(!s.empty() && s.top() < *it) {
+            root = s.top();
+            s.pop();
+        }
+        s.push(*it);
+    }
+    return 1;        
+}
 
 int main() {
-
-    int t = 0;
-    std::cin >> t;
-    std::vector<test_t> tests(t);
-    for(int i=0; i<t; i++) {
-        std::cin >> tests.at(i).n;  
-        for(int j=0; j<(tests.at(i).n); j++) {
-            int el = 0;
+    int num_tests;
+    std::cin >> num_tests;
+    std::vector<int> test;
+    int size;
+    for(int i = 0; i < num_tests; i++) {
+        std::cin >> size;
+        test.reserve(size);
+        int el;
+        for(int j = 0; j < size; j++) {
             std::cin >> el;
-            tests.at(i).vec.push_back(el);
+            test.push_back(el);
         }
+        std::cout << check_preorder(test) << std::endl;
+        test.clear();
     }
-
 }
