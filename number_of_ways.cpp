@@ -1,7 +1,5 @@
 #include <vector>
 #include <iostream>
-#include <algorithm>
-#include <functional>
 
 uint64_t num_ways(std::vector<uint64_t> test, uint64_t sum) {
     //if the reminder of sum / 3 is != 0, return 0
