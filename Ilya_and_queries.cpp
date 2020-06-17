@@ -10,7 +10,7 @@ vector<int> prefix_sum(vector<T> vec, bool (*compare) (T,T)) {
     vector<int> sums(vec.size()+1);
     sums[0] = 0;
 
-    for(size_t i=0; i<vec.size(); i++)
+    for(size_t i = 1; i<vec.size(); i++)
         sums[i] = compare(vec[i-1],vec[i])?sums[i-1]+1:sums[i-1];
     sums[vec.size()] = sums[vec.size()-1];
 
