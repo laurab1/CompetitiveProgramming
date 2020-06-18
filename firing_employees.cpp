@@ -16,25 +16,26 @@ bool is_prime(int num) {
 }
 
 void black_listed(test_t test) {
-    std::vector<std::vector<int>> pos;
+    std::vector<std::vector<int>> pos(test.vec.size() + 1, std::vector<int>());
     for(int i=0; i<test.vec.size()+1; i++) {
-        pos.push_back(std::vector<int>(1, i+1));
+        pos.at(test.vec.at(i)).push_back(i + 1);
     }
     
     std::stack<int> stack;
-    std::vector<int> sen;
-    for(int i=0; i<test.vec.size()+1; i++)
-        sen.push_back(0);
+    std::vector<int> sen(test.vec.size() + 1, 0);
     stack.push(pos.at(0).front());
     for(int i=0; i<test.vec.size(); i++) {
         std::vector<int> tmp = pos[stack.top()];
-        std::cout << "ok" << std::endl;
+        std::cout << "bla" << std::endl;
         stack.pop();
-        for(auto it = tmp.begin(); it != tmp.end(); it++) {
-            sen[*it] = 1+ sen[test.vec.at(*it-1)];
-            stack.push(*it);
+        while(!tmp.empty()) {
+            sen[tmp.back()] = 1 + sen[test.vec.at(tmp.back()-1)];
+            stack.push(tmp.back());
+            tmp.pop_back();
         }
+        std::cout << "bla bla" << std::endl;
     }
+    std::cout << "bla bla bla" << std::endl;
     
     int fired = 0;
     for(int i=0; i<test.vec.size(); i++)
