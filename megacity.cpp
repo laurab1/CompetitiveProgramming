@@ -38,7 +38,7 @@ ddouble megacity(std::vector<std::tuple<int64_t, int64_t, int64_t>> vec, int64_t
     std::partial_sum(rads.begin(), rads.end(), res.begin(), pair_sum);
 
     for(auto it = res.begin(); it != res.end(); it++) {
-        if(it->second + s >= 1000000)
+        if(it->second + s >= GOAL)
             return it->first;
     }
 
