@@ -1,5 +1,10 @@
 #include <iostream>
 #include <vector>
+#include <tuple>
+#include <algorithm>
+
+template <typename T>
+using pair = std::tuple<T, T, T>;
 
 template<typename T, T msum(T const&, T const&)>
 class Unit {
@@ -65,22 +70,48 @@ class fenwick_tree {
         }
 };
 
-int main() {
-    int64_t t, n, u, q, l, r, val;
-    std::cin >> t;
-    for(int64_t i = 0; i < t; i++) {
-        std::cin >> n >> u;
-        fenwick_tree<monoid<int64_t, add<int64_t>>> ft(n);
-        for(int64_t j = 0; j < u; j++) {
-            std::cin >> l >> r >> val;
-            ft.update(l, val);
-            val *= -1;
-            ft.update(r+1, val);
-        }
-        std::cin >> q;
-        for(int64_t j = 0; j < q; j++) {
-            std::cin >> val;
-            std::cout << ft.get_sum(val) << std::endl;
-        }
+void nested_segments(std::vector<pair<int64_t>> segs, std::vector<int64_t> elems) {
+    std::vector<int64_t> res(segs.size());
+    fenwick_tree<monoid<int64_t, add<int64_t>>> ft(elems.size());
+    int64_t l, r, i;
+
+    std::sort(elems.begin(), elems.end());
+    for(auto it = segs.begin(); it != segs.end(); it++) {
+        std::tie(l, r, i) = *it;
+        std::get<0>(*it) = std::lower_bound(elems.begin(), elems.end(), l) - elems.begin();
+        std::get<1>(*it) = std::lower_bound(elems.begin(), elems.end(), r) - elems.begin();
     }
+
+    std::sort(segs.begin(), segs.end(), [](pair<int64_t> a, pair<int64_t> b) {
+        return std::get<0>(a) < std::get<0>(b);
+    });
+
+    for(auto it = segs.begin(); it != segs.end(); it++) {
+        std::tie(l, r, i) = *it;
+        ft.update(r, 1);
+    }
+    for(auto it = segs.begin(); it != segs.end(); it++) {
+        std::tie(l, r, i) = *it;
+        res.at(i) = ft.get_sum(r) - 1;
+        ft.update(r, -1);
+    }
+    for(auto it = res.begin(); it != res.end(); it++)
+        std::cout << *it << std::endl;
+}
+
+int main() {
+    int64_t n, f, s;
+    std::cin >> n;
+    std::vector<pair<int64_t>> segs(n);
+    std::vector<int64_t> elems;
+    elems.reserve(n*2);
+    for(int64_t i = 0; i < n; i++) {
+        std::cin >> f >> s;
+        segs.at(i) = pair<int64_t>(f, s, i);
+        elems.push_back(f);
+        elems.push_back(s);
+    }
+    nested_segments(segs, elems);
+
+    return 0;
 }

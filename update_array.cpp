@@ -61,7 +61,7 @@ class fenwick_tree {
         }
 
         void update(int64_t index, vtype val) {
-            for (size_t i = index + 1; i < ft.size(); i += (i & -i)) {
+            for (int64_t i = index + 1; i < ft.size(); i += (i & -i)) {
                 ft.at(i) = mon.madd(ft.at(i), val);
             } 
         }
