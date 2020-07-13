@@ -98,16 +98,19 @@ class SegmentTree {
 
 template <typename T>
 class Node {
-    private:
-    T val;
-
     public:
     int64_t label;
+    T val;
 
     Node(T v, int64_t lbl) : val(v), label(lbl) {}
 
-    void Set(T v) {
-        val = v;
+    static void swap(Node<T> u, Node<T> v) {
+        T tmp = u.val;
+        int64_t lbl = u.label;
+        u.val = v.val;
+        u.label = v.label;
+        v.val = tmp;
+        v.label = lbl;
     }
 };
 
@@ -151,24 +154,24 @@ class HeavyLight {
     using vtype = typename Tm::mtype;
 
     private:
-    std::vector<int64_t> parent;
-    std::vector<int64_t> heavy;
+    std::vector<Node<vtype>> parent;
+    std::vector<Node<vtype>> heavy;
     std::vector<int64_t> depth;
-    std::vector<int64_t> root;
+    std::vector<Node<vtype>> root;
     std::vector<int64_t> treePos;
     SegmentTree<vtype> stree;
 
     template <typename G>
-    int64_t dfs(const G& graph, int v) {
+    int64_t dfs(const G& graph, Node<vtype> v) {
         int64_t size = 1;
         int64_t max_subtree = 0;
-        for(int64_t u : graph[v])
-            if(u != parent.at(v)) {
-                parent.at(u) = v;
+        for(Node<vtype> u : graph[v])
+            if(u.label != parent.at(v).label) {
+                parent.at(u).label = v.label;
                 depth.at(u) = depth.at(v) + 1;
                 int64_t subtree = dfs(graph, u);
                 if(subtree > max_subtree) {
-                    heavy.at(v) = u;
+                    heavy.at(v).label = u.label;
                     max_subtree = subtree;
                 }
                 size += subtree;
@@ -177,16 +180,22 @@ class HeavyLight {
     }
 
     template <typename ModOp>
-    void process_path(int64_t u, int64_t v, ModOp op) {
-        while(root.at(u) != root.at(v)) {
-            if(depth.at(root.at(u)) > depth.at(root.at(v)))
-                std::swap(u, v);
-            op(treePos.at(root.at(v)), treePos.at(v) + 1);
-            v = parent.at(root.at(v));
+    void process_path(Node<vtype> u, Node<vtype> v, ModOp op) {
+        int64_t l1 = u.label;
+        int64_t l2 = v.label;
+        while(root.at(l1).label != root.at(l2).label) {
+            if(depth.at(root.at(l1).label) > depth.at(root.at(l2).label)){
+                Node<vtype>::swap(u, v);
+                std::swap(l1, l2);
+            }
+            op(treePos.at(root.at(l2).label), treePos.at(l2) + 1);
+            v = parent.at(root.at(l2).label);
         }
-        if(depth.at(u) > depth.at(v))
-            std::swap(u, v);
-            op(treePos.at(u), treePos.at(v) + 1);
+        if(depth.at(l1) > depth.at(l2)) {
+            Node<vtype>::swap(u, v);
+            std::swap(l1, l2);
+        }
+        op(treePos.at(l1), treePos.at(l2) + 1);
     }
 
     public:
