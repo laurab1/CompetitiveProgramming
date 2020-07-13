@@ -147,6 +147,12 @@ class Graph {
         nodes(nds.size());
         std::copy(nds.begin(), nds.end(), nodes.begin());
     }
+
+    std::vector<Node<vtype>> GetNodes() {
+        std::vector<Node<vtype>> nds(nodes.size());
+        std::copy(nodes.begin(), nodes.end(), nds.begin());
+        return nds;
+    }
 };
 
 template <typename Tm>
@@ -207,14 +213,14 @@ class HeavyLight {
         depth(graph.size());
         root(graph.size());
         treePos(graph.size());
-        std::fill_n(heavy, size, -1);
-        parent.at(0) = -1;
+        std::fill(heavy, Node<vtype>(Tm::nae(), -1));
+        parent.at(0) = Node<vtype>(Tm::nae(), -1);
         depth.at(0) = 0;
         dfs(graph, 0);
         for(int64_t i = 0, curr = 0; i < size; i++) 
-            if(parent.at(i) == -1 || heavy.at(parent.at(i)) != i)
-                for(int64_t j = i; j != -1; j = heavy.at(j)) {
-                    root.at(j) = i;
+            if(parent.at(i).label == -1 || heavy.at(parent.at(i)).label != i)
+                for(int64_t j = i; j != -1; j = heavy.at(j).label) {
+                    root.at(j).label = i;
                     treePos.at(j) = curr++;
                 }
     }
