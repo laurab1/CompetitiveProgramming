@@ -10,3 +10,4 @@
 |  07/10/2019   |  Megacity ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/megacity.cpp)) <br/> Find pair ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/find_pair.cpp)) <br/> Two heaps ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/two_heaps.cpp)) <br/> |
 |  14/10/2019   |  Update the array ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/update_array2.cpp)) <br/> |
 |  15/10/2019   |  Nested segments ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/nested_segments.cpp)) <br/> Pashmak and Parmida's problem ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/pashmak.cpp)) <br/> |
+|  11/11/2019   |  Longest common subsequence ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/lcs.cpp)) <br/> |
