@@ -11,3 +11,4 @@
 |  14/10/2019   |  Update the array ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/update_array2.cpp)) <br/> |
 |  15/10/2019   |  Nested segments ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/nested_segments.cpp)) <br/> Pashmak and Parmida's problem ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/pashmak.cpp)) <br/> |
 |  11/11/2019   |  Longest common subsequence ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/lcs.cpp)) <br/> 0-1 knapsack ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/0-1_knapsack.cpp)) <br/> |
+|  12/11/2019   |  Subset sum ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/subset_sum.cpp)) <br/> |
