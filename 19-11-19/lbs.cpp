@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 uint64_t lis(std::vector<uint64_t> vec) {
     uint64_t n = vec.size();
@@ -33,12 +34,16 @@ uint64_t lis(std::vector<uint64_t> vec) {
 int main() {
     uint64_t t, n;
     std::cin >> t;
-    for(uint64_t i = 0; i < t; i++) {
+    for (uint64_t i = 0; i < t; i++) {
         std::cin >> n;
         std::vector<uint64_t> vec(n);
-        for (uint64_t j = 0; j < n; j++)
+        for(uint64_t j = 0; j < n; j++)
             std::cin >> vec.at(j);
-        std::cout << lis(vec) << std::endl;
+        std::vector<uint64_t> rev(n);
+        std::reverse_copy(vec.begin(), vec.end(), rev.begin());
+        uint64_t l1 = lis(vec);
+        uint64_t l2 = lis(rev);
+        std::cout << l1 + l2 - 1 << std::endl;
     }
     return 0;
 }
