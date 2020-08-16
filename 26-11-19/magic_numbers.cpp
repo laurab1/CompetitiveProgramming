@@ -9,7 +9,7 @@ std::string is_magic(std::string num) {
     uint64_t i = 0;
     uint64_t j = 3;
     while(i < n) {
-        if(i + j >= n)
+        if(i + j > n && j > 1)
             j--;
         auto sub = magic.find(num.substr(i, j));
         if(sub != magic.end()) {
