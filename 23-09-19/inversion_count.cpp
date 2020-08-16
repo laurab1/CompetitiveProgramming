@@ -24,7 +24,7 @@ void merge(long arr[], int left, int center, int right) {
 		} 
 		else
 		{   
-      inversions += n1 - i;
+      		inversions += n1 - i;
 			arr[k++] = R[j++]; 
 		} 
 	} 
