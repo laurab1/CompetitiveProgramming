@@ -14,4 +14,4 @@
 |  12/11/2019   |  Subset sum ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/12-11-19/subset_sum.cpp)) <br/> Edit distance ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/12-11-19/edit_distance.cpp)) <br/> |
 |  19/11/2019   |  Longest increasing subsequence ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/19-11-19/lis.cpp)) <br/> |
 |  25/11/2019   |  Longest palindromic subsequence ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/25-11-19/lps.cpp)) <br/> |
-|  26/11/2019   |  N meetings in one room ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/26-11-19/n_meetings.cpp)) <br/> |
+|  26/11/2019   |  N meetings in one room ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/26-11-19/n_meetings.cpp)) <br/> Wilbur and array ([code](https://github.com/laurab1/CompetitiveProgramming/blob/master/26-11-19/wilbur_and_array.cpp)) <br/> |
