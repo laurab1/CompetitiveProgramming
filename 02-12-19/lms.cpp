@@ -2,8 +2,6 @@
 #include <iterator>
 #include <vector>
 
-char in;
-
 template <class InputIterator, class Compare, class T = typename std::iterator_traits<InputIterator>::value_type>
 std::vector<T> lms(InputIterator first, InputIterator last, Compare comp) {
     std::vector<T> res;
