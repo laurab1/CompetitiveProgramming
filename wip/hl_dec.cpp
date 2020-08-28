@@ -3,29 +3,27 @@
 #include <tuple>
 #include <algorithm>
 
-template <typename T, T msum(T const&, T const&)>
-class Unit {
-    public:
-    static const T empty;
-    static const T NaE;
-};
-
 template <typename T>
 T add(T const& a, T const& b) {
     return a + b;
 }
 
-template <>
+template <typename T>
+T sub(T const& a, T const& b) {
+    return a - b;
+};
+
+template<typename T, T msum(T const&, T const&)>
+class Unit {
+    public:
+    static const T empty;
+};
+
+template<>
 const int64_t Unit<int64_t, add<int64_t>>::empty(0);
 
-template <>
-const int64_t Unit<int64_t, add<int64_t>>::NaE(-1);
-
-template <typename T, 
-          T msum(T const&, T const&), 
-          T unit = Unit<T, msum>::empty,
-          T nae = Unit<T, msum>::NaE>
-class Monoid {
+template<typename T, T msum(T const&, T const&), T unit = Unit<T, msum>::empty>
+class monoid {
     public:
     using mtype = T;
     static T munit() {
@@ -34,66 +32,127 @@ class Monoid {
     static mtype madd(mtype a, mtype b) {
         return msum(a, b);
     }
-    static mtype mnae() {
-        return nae;
+};
+
+template<typename T, T gsub(T const&, T const&), T msum(T const&, T const&), T unit = Unit<T, msum>::empty>
+class group : public monoid<T, msum> {
+    public:
+    
+    static T gdiff(T a, T b) {
+        return gsub(a, b);
     }
 };
 
-
 template <typename Tm>
-class SegmentTree {
+class segment_tree {
     using vtype = typename Tm::mtype;
-
     private:
-        std::vector<vtype> tree;
-        int64_t size;
+    std::vector<vtype> st;
+    int64_t in_size;
+
+    void build_stree(std::vector<vtype> v, int64_t idx, int64_t l, int64_t r) {
+        if(l == r)  {
+            st.at(idx) = v.at(l);
+            return;
+        }
+        int64_t center = l + (r-l)/2;
+        int64_t lch = idx*2+1;
+        int64_t rch = idx*2+2;
+        build_stree(v, lch, l, center);
+        build_stree(v, rch, center + 1, r);
+        st.at(idx) = Tm::madd(st.at(lch), st.at(rch));
+    }
+
+    void update_aux(int64_t start, int64_t end, int64_t idx, vtype diff, int64_t seg_idx) {
+        if(idx < start or idx > end or seg_idx >= st.size())
+            return;
+
+        st.at(seg_idx) = Tm::madd(st.at(seg_idx), diff);
+
+        if(start != end) {
+            int64_t center = start + (end - start)/2;
+            int64_t lch = seg_idx*2+1;
+            int64_t rch = seg_idx*2+2;
+
+            update_aux(start, center, idx, diff, lch);
+            update_aux(center, end, idx, diff, rch);
+        }
+    }
+
+    void inc_aux(int64_t start, int64_t end, int64_t idx, vtype val, int64_t seg_idx) {
+        if(idx < start or idx > end or seg_idx >= st.size())
+            return;
+
+        st.at(seg_idx) = Tm::madd(st.at(seg_idx), val);
+
+        if(start != end) {
+            int64_t center = start + (end - start)/2;
+            int64_t lch = seg_idx*2+1;
+            int64_t rch = seg_idx*2+2;
+
+            inc_aux(start, center, idx, val, lch);
+            inc_aux(center, end, idx, val, rch);
+        }
+    }
+
+    vtype sum_aux(int64_t start, int64_t end, int64_t qstart, int64_t qend, int64_t seg_idx) {
+        if(qstart <= start and qend >= end)
+            return st.at(seg_idx);
+
+        if(end < qstart or start > qend)
+            return Tm::munit();
+
+        int64_t center = start + (end - start)/2;
+        int64_t lch = seg_idx*2+1;
+        int64_t rch = seg_idx*2+2;
+
+        return Tm::madd(sum_aux(start, center, qstart, qend, lch), sum_aux(center+1, end, qstart, qend, rch));
+    }
 
     public:
-    SegmentTree(int64_t s) : tree(s*2, Tm::munit()), size(s) {
-        for(int64_t i = s-1; i > 0; i--)
-            tree.at(i) = Tm::madd(tree.at(i<<1), tree.at(i<<1|1));
+    segment_tree(int64_t n) : in_size(n) {
+        int64_t size = (int64_t)(ceil(log2(n)));
+        int64_t max_size = 2*(int64_t)pow(2, size) - 1;
+        st.resize(max_size);
     }
 
-    //update node
-    void update(int64_t idx, vtype val) {
-        for(tree.at(idx + size) = val; idx > 1; idx >>= 1)
-            tree.at(idx>>1) = Tm::madd(tree.at(idx), tree.at(idx^1));
+    segment_tree(std::vector<vtype> v) : in_size(v.size()) {
+        int64_t size = (int64_t)(ceil(log2(in_size)));
+        int64_t max_size = 2*(int64_t)pow(2, size) - 1;
+        st.resize(max_size);
+        build_stree(v, 0, 0, in_size-1);
     }
 
-    //update range
-    void update(int64_t left, int64_t right, vtype val) {
-        for(left += size, right += size; left < right; left >>= 1, right >>= 1) {
-            if(left & 1) {
-                tree.at(left) = Tm::madd(tree.at(left), val);
-                left++;
-            }
-            if(right & 1) {
-                right--;
-                tree.at(right) = Tm::madd(tree.at(right), val);
-            }
-        }
+    void print() {
+        for(auto it = st.begin(); it != st.end(); it++)
+            std::cout << *it << std::endl;
     }
 
-    //query range
-    vtype query(int64_t left, int64_t right) {
-        vtype res = Tm::munit();
-        for(left += size, right += size; left < right; left >>= 1, right >>= 1) {
-            if(left & 1)
-                res = Tm::madd(res, tree.at(left++));
-            if(right & 1)
-                res = Tm::madd(res, tree.at(right++));
-        }
-        return res;
+    void update(vtype val, int64_t idx) {
+        if(idx < 0 or idx >= in_size)
+            return;
+
+        vtype diff = Tm::gdiff(val, st.at(idx));
+        st.at(idx) = val;
+
+        update_aux(0, in_size-1, idx, diff, 0);
     }
 
-    //query point
-    vtype query(int64_t idx) {
-        vtype res = Tm::munit();
-        for(idx += size; idx > 0; idx >>= 1)
-            res = Tm::madd(res, tree.at(idx));
-        return res;
+    void inc(int64_t idx, vtype val) {
+        if(idx < 0 or idx >= in_size)
+            return;
+
+        st.at(idx) += val;
+
+        inc_aux(0, in_size-1, idx, val, 0);
     }
 
+    vtype query_sum(int64_t start, int64_t end) {
+        if(start < 0 or end >= in_size or start == end)
+            return Tm::munit();
+
+        return sum_aux(0, in_size-1, start, end, 0);
+    }
 };
 
 template <typename T>
@@ -238,8 +297,6 @@ class HeavyLight {
 };
 
 int main() {
-    //std::ios_base::sync_with_stdio(false);
-
     int64_t t, n;
     std::cin >> t;
     for(int64_t i = 0; i < t; i++) {
@@ -249,8 +306,8 @@ int main() {
         for(int64_t j = 0; j < n-1; j++) {
             std::cin >> es.at(j).first >> es.at(j).second >> costs.at(j);
         }
-        Graph<Monoid<int64_t, add<int64_t>>> graph(n+1, es);
-        HeavyLight<Monoid<int64_t, add<int64_t>>> path_tree(graph);
+        Graph<monoid<int64_t, add<int64_t>>> graph(n+1, es);
+        HeavyLight<monoid<int64_t, add<int64_t>>> path_tree(graph);
         for(int64_t i = 0; i < es.size(); i++) {
             path_tree.set(i+1, costs.at(i));
         }

@@ -2,48 +2,44 @@
 #include <vector>
 #include <algorithm>
 
-uint64_t lis(std::vector<uint64_t> vec) {
-    uint64_t n = vec.size();
-    std::vector<uint64_t> m(n+1, 0);
-    uint64_t length = 0;
-    uint64_t tmp_lenght = 0;
+int64_t lbs(std::vector<int64_t> vec) {
+    int64_t n = vec.size();
+    std::vector<int64_t> lisvec(n, 1);
+    std::vector<int64_t> ldsvec(n, 1);
 
-    m.at(1) = vec.at(0);
-    for(uint64_t i = 0; i < n; i++) {
-        uint64_t low = 1;
-        uint64_t high = length;
-
-        while(low <= high) {
-            uint64_t mid = low + (high - low)/2;
-            if(vec.at(m.at(mid)) >= vec.at(i))
-                high = mid - 1;
-            else
-                low = mid + 1;
-        }
-
-        tmp_lenght = low;
-
-        m.at(tmp_lenght) = i;
-
-        length = tmp_lenght>length? tmp_lenght: length;
+    for(int64_t i = 1; i < n; i++) {
+        for(int64_t j = 0; j < i; j++)
+            if(vec.at(i) > vec.at(j) and lisvec.at(i) < lisvec.at(j) + 1)
+                lisvec.at(i) = lisvec.at(j) + 1;
     }
 
-    return length;
+    std::reverse(vec.begin(), vec.end());
+
+    for(int64_t i = 1; i < n; i++) {
+        for(int64_t j = 0; j < i; j++)
+            if(vec.at(i) > vec.at(j) and ldsvec.at(i) < ldsvec.at(j) + 1)
+                ldsvec.at(i) = ldsvec.at(j) + 1;
+    }
+
+    std::reverse(ldsvec.begin(), ldsvec.end());
+
+    int64_t max = lisvec.at(0) + ldsvec.at(0) - 1;
+    for(int64_t i = 1; i < n; i++) {
+        int64_t tmp = lisvec.at(i) + ldsvec.at(i) - 1;
+        max = (tmp > max)? tmp: max;
+    }
+    return max;
 }
 
 int main() {
-    uint64_t t, n;
+    int64_t t, n;
     std::cin >> t;
-    for (uint64_t i = 0; i < t; i++) {
+    for (int64_t i = 0; i < t; i++) {
         std::cin >> n;
-        std::vector<uint64_t> vec(n);
-        for(uint64_t j = 0; j < n; j++)
+        std::vector<int64_t> vec(n);
+        for(int64_t j = 0; j < n; j++)
             std::cin >> vec.at(j);
-        std::vector<uint64_t> rev(n);
-        std::reverse_copy(vec.begin(), vec.end(), rev.begin());
-        uint64_t l1 = lis(vec);
-        uint64_t l2 = lis(rev);
-        std::cout << l1 + l2 - 1 << std::endl;
+        std::cout << lbs(vec) << std::endl;
     }
     return 0;
 }
