@@ -14,24 +14,25 @@ int64_t vertex_cover(std::vector<T> parents,
                      std::vector<std::vector<int64_t>> dp, 
                      adj_list<T> adj, 
                      T node, 
-                     int8_t covered) {
+                     int64_t covered) {
     if(adj.at(node).size() == 0)
         return covered;
     if(dp.at(node).at(covered) != -1)
         return dp.at(node).at(covered);
 
-    int64_t sum = 0;
+    int64_t sum = covered;
 
     for(int64_t i = 0; i < adj.at(node).size(); i++) {
         T v = adj.at(node).at(i);
         if(v != parents.at(node)) {
+            parents.at(v) = node;
             if(!covered)
-                sum += vertex_cover(parents, dp, adj, v, 1);
+                sum += vertex_cover(parents, dp, adj, v, 1L);
             else
-                sum += std::min(vertex_cover(parents, dp, adj, v, 1), vertex_cover(parents, dp, adj, v, 0));
+                sum += std::min(vertex_cover(parents, dp, adj, v, 1L), vertex_cover(parents, dp, adj, v, 0L));
         }
     }
-    dp.at(node).at(covered) = sum + covered;
+    dp.at(node).at(covered) = sum;
     return dp.at(node).at(covered);
 }
 
@@ -52,8 +53,8 @@ int main() {
 
     std::vector<std::vector<int64_t>> dp(n, std::vector<int64_t>(2, -1));
 
-    std::cout << std::min(vertex_cover(parents, dp, adj, 0L, 0), 
-                          vertex_cover(parents, dp, adj, 0L, 1)) << std::endl;
+    std::cout << std::min(vertex_cover(parents, dp, adj, 0L, 0L), 
+                          vertex_cover(parents, dp, adj, 0L, 1L)) << std::endl;
 
     return 0;
 }
