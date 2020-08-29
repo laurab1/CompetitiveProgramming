@@ -5,7 +5,6 @@
 bool dfs(const std::vector<std::vector<int>> &graph, std::vector<int> &visited, int64_t i, std::stack<char> &st) {
     if(visited.at(i) == 1)
         return false;
-        
     if(visited.at(i) == 0) {
         visited.at(i) = 1;
         for(auto el : graph.at(i)) {
@@ -32,10 +31,9 @@ std::string topological_sort(std::vector<std::string> vec) {
         while(j < len and !found) {
             if(vec.at(i).at(j) != vec.at(i+1).at(j)) {
                 found = true;
-                std::cout << int(vec.at(i+1).at(j)) - 97 << std::endl;
                 graph.at(int(vec.at(i).at(j)) - 97).push_back(int(vec.at(i+1).at(j)) - 97);
-                j++;
             }
+            j++;
         }
 
         if(!found and vec.at(i).size() > vec.at(i+1).size())
@@ -43,11 +41,10 @@ std::string topological_sort(std::vector<std::string> vec) {
     }
 
     bool order_found = true;
-    for(int i = 0; i < 26; i++) {
+    for(int i = 25; i >= 0; i--) {
         if(!visited.at(i))
             order_found = order_found and dfs(graph, visited, i, order);
     }
-    
     if(order_found) {
         std::string alphabet;
         while(!order.empty()) {
