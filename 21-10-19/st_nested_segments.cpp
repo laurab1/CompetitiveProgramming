@@ -84,19 +84,22 @@ class segment_tree {
         if(idx < start or idx > end or seg_idx >= st.size())
             return;
 
-        st.at(seg_idx) = Tm::madd(st.at(seg_idx), val);
-
-        if(start != end) {
-            int64_t center = start + (end - start)/2;
-            int64_t lch = seg_idx*2+1;
-            int64_t rch = seg_idx*2+2;
-
-            inc_aux(start, center, idx, val, lch);
-            inc_aux(center, end, idx, val, rch);
+        int64_t lch = seg_idx*2+1;
+        int64_t rch  = seg_idx*2+2;
+        if(lch >= in_size or rch >= in_size) {
+            st.at(seg_idx) = Tm::madd(st.at(seg_idx), val);
         }
+
+        int64_t center = start + (end - start)/2;
+        inc_aux(start, center, idx, val, lch);
+        inc_aux(center + 1, end, idx, val, rch);
+        
+        if(lch < in_size and rch < in_size)
+            st.at(seg_idx) = Tm::madd(st.at(lch), st.at(rch));
     }
 
     vtype sum_aux(int64_t start, int64_t end, int64_t qstart, int64_t qend, int64_t seg_idx) {
+
         if(qstart <= start and qend >= end)
             return st.at(seg_idx);
 
@@ -143,8 +146,6 @@ class segment_tree {
         if(idx < 0 or idx >= in_size)
             return;
 
-        st.at(idx) += val;
-
         inc_aux(0, in_size-1, idx, val, 0);
     }
 
@@ -153,14 +154,6 @@ class segment_tree {
             return Tm::munit();
 
         return sum_aux(0, in_size-1, start, end, 0);
-    }
-
-    //DUMMY
-    vtype point_sum(int64_t idx) {
-        if(idx < 0 or idx > in_size)
-            reutrn Tm::munit();
-        
-        return Tm::munit();
     }
 };
 
@@ -192,7 +185,7 @@ void nested_segments(std::vector<pair<int64_t>> segs, std::vector<int64_t> elems
 
     for(auto it = segs.begin(); it != segs.end(); it++) {
         std::tie(l, r, i) = *it;
-        res.at(i) = st.query_sum(r-1, r) - 1;
+        res.at(i) = st.query_sum(l, r) - 1;
         st.inc(r, -1);
     }
 
