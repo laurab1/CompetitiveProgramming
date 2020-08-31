@@ -64,23 +64,7 @@ class segment_tree {
         st.at(idx) = Tm::madd(st.at(lch), st.at(rch));
     }
 
-    void update_aux(int64_t start, int64_t end, int64_t idx, vtype diff, int64_t seg_idx) {
-        if(idx < start or idx > end or seg_idx >= st.size())
-            return;
-
-        st.at(seg_idx) = Tm::madd(st.at(seg_idx), diff);
-
-        if(start != end) {
-            int64_t center = start + (end - start)/2;
-            int64_t lch = seg_idx*2+1;
-            int64_t rch = seg_idx*2+2;
-
-            update_aux(start, center, idx, diff, lch);
-            update_aux(center, end, idx, diff, rch);
-        }
-    }
-
-    void inc_aux(int64_t start, int64_t end, int64_t idx, vtype val, int64_t seg_idx) {
+    void update_aux(int64_t start, int64_t end, int64_t idx, vtype val, int64_t seg_idx) {
         if(idx < start or idx > end or seg_idx >= st.size())
             return;
 
@@ -91,8 +75,8 @@ class segment_tree {
         }
 
         int64_t center = start + (end - start)/2;
-        inc_aux(start, center, idx, val, lch);
-        inc_aux(center + 1, end, idx, val, rch);
+        update_aux(start, center, idx, val, lch);
+        update_aux(center + 1, end, idx, val, rch);
         
         if(lch < in_size and rch < in_size)
             st.at(seg_idx) = Tm::madd(st.at(lch), st.at(rch));
@@ -132,21 +116,11 @@ class segment_tree {
             std::cout << *it << std::endl;
     }
 
-    void update(vtype val, int64_t idx) {
+    void update(int64_t idx, vtype val) {
         if(idx < 0 or idx >= in_size)
             return;
 
-        vtype diff = Tm::gdiff(val, st.at(idx));
-        st.at(idx) = val;
-
-        update_aux(0, in_size-1, idx, diff, 0);
-    }
-
-    void inc(int64_t idx, vtype val) {
-        if(idx < 0 or idx >= in_size)
-            return;
-
-        inc_aux(0, in_size-1, idx, val, 0);
+        update_aux(0, in_size-1, idx, val, 0);
     }
 
     vtype query_sum(int64_t start, int64_t end) {
@@ -180,13 +154,13 @@ void nested_segments(std::vector<pair<int64_t>> segs, std::vector<int64_t> elems
 
     for(auto it = segs.begin(); it != segs.end(); it++) {
         std::tie(l, r, i) = *it;
-        st.inc(r, 1);
+        st.update(r, 1);
     }
 
     for(auto it = segs.begin(); it != segs.end(); it++) {
         std::tie(l, r, i) = *it;
         res.at(i) = st.query_sum(l, r) - 1;
-        st.inc(r, -1);
+        st.update(r, -1);
     }
 
     for(auto it = res.begin(); it != res.end(); it++)
