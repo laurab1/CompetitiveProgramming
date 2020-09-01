@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <tuple>
+#include <cmath>
 #include <algorithm>
 
 template <typename T>
@@ -41,6 +42,10 @@ class group : public monoid<T, msum> {
     static T gdiff(T a, T b) {
         return gsub(a, b);
     }
+
+    static T inv(T a) {
+        return gsub(unit, a);
+    }
 };
 
 template <typename Tm>
@@ -63,39 +68,26 @@ class segment_tree {
         st.at(idx) = Tm::madd(st.at(lch), st.at(rch));
     }
 
-    void update_aux(int64_t start, int64_t end, int64_t idx, vtype diff, int64_t seg_idx) {
+    void update_aux(int64_t start, int64_t end, int64_t idx, vtype val, int64_t seg_idx) {
         if(idx < start or idx > end or seg_idx >= st.size())
             return;
 
-        st.at(seg_idx) = Tm::madd(st.at(seg_idx), diff);
-
-        if(start != end) {
-            int64_t center = start + (end - start)/2;
-            int64_t lch = seg_idx*2+1;
-            int64_t rch = seg_idx*2+2;
-
-            update_aux(start, center, idx, diff, lch);
-            update_aux(center, end, idx, diff, rch);
+        int64_t lch = seg_idx*2+1;
+        int64_t rch  = seg_idx*2+2;
+        if(lch >= in_size or rch >= in_size) {
+            st.at(seg_idx) = Tm::madd(st.at(seg_idx), val);
         }
-    }
 
-    void inc_aux(int64_t start, int64_t end, int64_t idx, vtype val, int64_t seg_idx) {
-        if(idx < start or idx > end or seg_idx >= st.size())
-            return;
-
-        st.at(seg_idx) = Tm::madd(st.at(seg_idx), val);
-
-        if(start != end) {
-            int64_t center = start + (end - start)/2;
-            int64_t lch = seg_idx*2+1;
-            int64_t rch = seg_idx*2+2;
-
-            inc_aux(start, center, idx, val, lch);
-            inc_aux(center, end, idx, val, rch);
-        }
+        int64_t center = start + (end - start)/2;
+        update_aux(start, center, idx, val, lch);
+        update_aux(center + 1, end, idx, val, rch);
+        
+        if(lch < in_size and rch < in_size)
+            st.at(seg_idx) = Tm::madd(st.at(lch), st.at(rch));
     }
 
     vtype sum_aux(int64_t start, int64_t end, int64_t qstart, int64_t qend, int64_t seg_idx) {
+
         if(qstart <= start and qend >= end)
             return st.at(seg_idx);
 
@@ -128,23 +120,11 @@ class segment_tree {
             std::cout << *it << std::endl;
     }
 
-    void update(vtype val, int64_t idx) {
+    void update(int64_t idx, vtype val) {
         if(idx < 0 or idx >= in_size)
             return;
 
-        vtype diff = Tm::gdiff(val, st.at(idx));
-        st.at(idx) = val;
-
-        update_aux(0, in_size-1, idx, diff, 0);
-    }
-
-    void inc(int64_t idx, vtype val) {
-        if(idx < 0 or idx >= in_size)
-            return;
-
-        st.at(idx) += val;
-
-        inc_aux(0, in_size-1, idx, val, 0);
+        update_aux(0, in_size-1, idx, val, 0);
     }
 
     vtype query_sum(int64_t start, int64_t end) {
@@ -187,7 +167,7 @@ class Graph {
     Graph(int64_t size) : graph(size), nodes(size), size(size) {}
 
     //build a graph from a vector of edges
-    Graph(int64_t size, std::vector<std::pair<int64_t, int64_t>> es) : size(size), graph(size), nodes(size, Node<vtype>(Tm::mnae(), -1)) {
+    Graph(int64_t size, std::vector<std::pair<int64_t, int64_t>> es) : size(size), graph(size), nodes(size, Node<vtype>(Tm::inv(1), -1)) {
         for(int64_t i = 0; i < es.size(); i++) {
             int64_t idx1 = es.at(i).first;
             int64_t idx2 = es.at(i).second;
@@ -195,6 +175,7 @@ class Graph {
                 nodes.at(idx1).label = idx1;
             if(nodes.at(idx2).label == -1)
                 nodes.at(idx2).label = idx2;
+            std::cout << "building" << std::endl;
             graph.at(idx1).push_back(es.at(i).second);
             graph.at(idx2).push_back(es.at(i).first);
         }
@@ -221,7 +202,7 @@ class HeavyLight {
     std::vector<int64_t> depth;
     std::vector<Node<vtype>> root;
     std::vector<int64_t> treePos;
-    SegmentTree<Tm> stree;
+    segment_tree<Tm> stree;
 
     int64_t dfs(Graph<Tm>& graph, int64_t v) {
         int64_t size = 1;
@@ -263,10 +244,10 @@ class HeavyLight {
 
     public:
     HeavyLight(Graph<Tm> graph) : stree(graph.size),
-                                  parent(graph.size, Node<vtype>(Tm::mnae(), -1)),
-                                  heavy(graph.size, Node<vtype>(Tm::mnae(), -1)),
+                                  parent(graph.size, Node<vtype>(Tm::inv(1), -1)),
+                                  heavy(graph.size, Node<vtype>(Tm::inv(1), -1)),
                                   depth(graph.size, 0),
-                                  root(graph.size, Node<vtype>(Tm::mnae(), -1)),
+                                  root(graph.size, Node<vtype>(Tm::inv(1), -1)),
                                   treePos(graph.size, 0) {
         dfs(graph, 0);
         for(int64_t i = 0, curr = 0; i < graph.size; i++) 
@@ -291,10 +272,12 @@ class HeavyLight {
         vtype res = Tm::munit();
         std::cout << "query path" << std::endl;
         process_path(u, v, [this, &res](int64_t left, int64_t right) {
-            Tm::madd(res, stree.query(left, right));
+            Tm::madd(res, stree.query_sum(left, right));
         });
     }
 };
+
+using stgroup = group<int64_t, sub<int64_t>, add<int64_t>>;
 
 int main() {
     int64_t t, n;
@@ -304,10 +287,14 @@ int main() {
         std::vector<std::pair<int64_t, int64_t>> es(n-1);
         std::vector<int64_t> costs(n-1);
         for(int64_t j = 0; j < n-1; j++) {
-            std::cin >> es.at(j).first >> es.at(j).second >> costs.at(j);
+            int64_t f, s;
+            std::cin >> f >> s  >> costs.at(j);
+            es.at(j).first = f - 1;
+            es.at(j).second = s - 1;
         }
-        Graph<monoid<int64_t, add<int64_t>>> graph(n+1, es);
-        HeavyLight<monoid<int64_t, add<int64_t>>> path_tree(graph);
+        Graph<stgroup> graph(n+1, es);
+        std::cout << "first loop" << std::endl;
+        HeavyLight<stgroup> path_tree(graph);
         for(int64_t i = 0; i < es.size(); i++) {
             path_tree.set(i+1, costs.at(i));
         }
@@ -316,11 +303,17 @@ int main() {
         int64_t a, b;
         std::cin >> query;
         std::cin >> a >> b;
-        if(query.compare("CHANGE") == 0)
+        if(query.compare("CHANGE") == 0) {
+            std::cout << "set1" << std::endl;
             path_tree.set(a+1, b);
+            std::cout << "set2" << std::endl;
+        }
         else {
-            if(query.compare("QUERY") == 0)
+            if(query.compare("QUERY") == 0) {
+                std::cout << "query1" << std::endl;
                 std::cout << path_tree.query_path(Node<int64_t>(a, a), Node<int64_t>(b, b));
+                std::cout << "query2" << std::endl;
+            }
         }
         std::cout << std::endl;
     }
