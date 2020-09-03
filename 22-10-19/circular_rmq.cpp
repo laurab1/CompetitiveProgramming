@@ -1,7 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
-#include <tuple>
+#include <sstream>
+#include <string>
 #include <algorithm>
 
 template <typename T>
@@ -10,8 +11,8 @@ T add(T const& a, T const& b) {
 }
 
 template <typename T>
-T sub(T const& a, T const& b) {
-    return a - b;
+T min(T const& a, T const& b) {
+    return std::min(a, b);
 };
 
 template<typename T, T msum(T const&, T const&)>
@@ -22,6 +23,9 @@ class Unit {
 
 template<>
 const int64_t Unit<int64_t, add<int64_t>>::empty(0);
+
+template<>
+const int64_t Unit<int64_t, min<int64_t>>::empty(__LONG_LONG_MAX__);
 
 template<typename T, T msum(T const&, T const&), T unit = Unit<T, msum>::empty>
 class monoid {
@@ -35,12 +39,18 @@ class monoid {
     }
 };
 
-template<typename T, T gsub(T const&, T const&), T msum(T const&, T const&), T unit = Unit<T, msum>::empty>
-class group : public monoid<T, msum> {
+template<typename T, T idem(T const&, T const&), 
+                     T msum(T const&, T const&), 
+                     T unit = Unit<T, msum>::empty,
+                     T idunit = Unit<T, idem>::empty>
+class semiring : public monoid<T, msum> {
     public:
     
-    static T gdiff(T a, T b) {
-        return gsub(a, b);
+    static T runit() {
+        return idunit;
+    }
+    static T midem(T a, T b) {
+        return idem(a, b);
     }
 };
 
@@ -62,7 +72,7 @@ class segment_tree {
         int64_t rch = idx*2+2;
         build_stree(v, lch, l, center);
         build_stree(v, rch, center + 1, r);
-        st.at(idx) = Tm::madd(st.at(lch), st.at(rch));
+        st.at(idx) = Tm::midem(st.at(lch), st.at(rch));
     }
 
     void update_aux(int64_t start, int64_t end, int64_t ustart, int64_t uend, vtype val, int64_t seg_idx) {
@@ -71,16 +81,16 @@ class segment_tree {
 
         int64_t lch = seg_idx*2+1;
         int64_t rch  = seg_idx*2+2;
-        if(lazy.at(seg_idx) != Tm::munit()) {
+        if(lazy.at(seg_idx) != Tm::runit()) {
             vtype toadd = lazy.at(seg_idx);
             for(int64_t i = 1; i < start - end + 1; i++)
                 toadd = Tm::madd(toadd, lazy.at(seg_idx));
             st.at(seg_idx) = Tm::madd(st.at(seg_idx), toadd);
             if(start != end) {
-                lazy.at(lch) = Tm::madd(lazy.at(lch), lazy.at(seg_idx));
-                lazy.at(rch) = Tm::madd(lazy.at(rch), lazy.at(seg_idx));
+                lazy.at(lch) = Tm::madd(Tm::runit(), lazy.at(seg_idx));
+                lazy.at(rch) = Tm::madd(Tm::runit(), lazy.at(seg_idx));
             }
-            lazy.at(seg_idx) = Tm::munit();
+            lazy.at(seg_idx) = Tm::runit();
         }
 
         if(start >= ustart and end <= uend) {
@@ -99,21 +109,21 @@ class segment_tree {
         update_aux(start, center, ustart, uend, val, lch);
         update_aux(center + 1, end, ustart, uend, val, rch);
 
-        st.at(seg_idx) = Tm::madd(st.at(lch), st.at(rch));
+        st.at(seg_idx) = Tm::midem(st.at(lch), st.at(rch));
     }
 
     vtype sum_aux(int64_t start, int64_t end, int64_t qstart, int64_t qend, int64_t seg_idx) {
         int64_t lch = seg_idx*2+1;
         int64_t rch = seg_idx*2+2;
 
-        if(lazy.at(seg_idx) != Tm::munit()) {
+        if(lazy.at(seg_idx) != Tm::runit()) {
             vtype toadd = lazy.at(seg_idx);
             for(int64_t i = 1; i < start - end + 1; i++)
                 toadd = Tm::madd(toadd, lazy.at(seg_idx));
             st.at(seg_idx) = Tm::madd(st.at(seg_idx), toadd);
             if(start != end) {
-                lazy.at(lch) = Tm::madd(lazy.at(lch), lazy.at(seg_idx));
-                lazy.at(rch) = Tm::madd(lazy.at(rch), lazy.at(seg_idx));
+                lazy.at(lch) = Tm::madd(Tm::runit(), lazy.at(seg_idx));
+                lazy.at(rch) = Tm::madd(Tm::runit(), lazy.at(seg_idx));
             }
             lazy.at(seg_idx) = 0;
         }
@@ -122,11 +132,11 @@ class segment_tree {
             return st.at(seg_idx);
 
         if(end < qstart or start > qend)
-            return Tm::munit();
+            return Tm::runit();
 
         int64_t center = start + (end - start)/2;
 
-        return Tm::madd(sum_aux(start, center, qstart, qend, lch), sum_aux(center+1, end, qstart, qend, rch));
+        return Tm::midem(sum_aux(start, center, qstart, qend, lch), sum_aux(center+1, end, qstart, qend, rch));
     }
 
     public:
@@ -162,100 +172,41 @@ class segment_tree {
     }
 };
 
-//std::vector<std::string> split(std::string str, char ch)
-//{
-//  std::vector<std::string> tokens;
-//  std::stringstream ss(str);
-//  std::string tok;
-//
-//  while(std::getline(ss, tok, ch)) 
-//    tokens.push_back(tok);
-//
-//  return tokens;
-//}
-//
-using stgroup = group<int64_t, sub<int64_t>, add<int64_t>>;
-//
-//int main() {
-//    int64_t n, m;
-//    std::cin >> n;
-//    std::vector<int64_t> vec(n);
-//
-//    for(int64_t i = 0; i < n; i++)
-//        std::cin >> vec.at(i);
-//
-//    std::cin >> m;
-//    std::string op;
-//    std::getline(std::cin, op);
-//
-//    for(int64_t i = 0; i < m; i++) {
-//      std::getline(std::cin, op);
-//      auto ops = (split(op, ' '));
-//      if(ops.size() == 2)
-//        std::cout << "query" << std::endl;
-//      else
-//        std::cout << "update" << std::endl;
-//    }
-//}
+std::vector<std::string> split(std::string str, char ch)
+{
+  std::vector<std::string> tokens;
+  std::stringstream ss(str);
+  std::string tok;
 
-//int main() {
-//    std::vector<int64_t> vec({1, 3, 5, 7, 9, 11});
-//    segment_tree<stgroup> st(vec);
-//    std::cout << st.query_sum(1,3) << std::endl;
-//    st.update(1, 5, 10);
-//    std::cout << st.query_sum(1,3) << std::endl;
-//
-//    return 0;
-//}
+  while(std::getline(ss, tok, ch)) 
+    tokens.push_back(tok);
 
-template <typename T>
-using pair = std::tuple<T, T, T>;
-
-void nested_segments(std::vector<pair<int64_t>> segs, std::vector<int64_t> elems) {
-    std::vector<int64_t> res(segs.size());
-    segment_tree<stgroup> st(elems.size());
-    int64_t l, r, i;
-
-    std::sort(elems.begin(), elems.end());
-
-    for(auto it = segs.begin(); it != segs.end(); it++) {
-        std::tie(l, r, i) = *it;
-        std::get<0>(*it) = std::lower_bound(elems.begin(), elems.end(), l) - elems.begin();
-        std::get<1>(*it) = std::lower_bound(elems.begin(), elems.end(), r) - elems.begin();
-    }
-
-    std::sort(segs.begin(), segs.end(), [](pair<int64_t> a, pair<int64_t> b) {
-        return std::get<0>(a) < std::get<0>(b);
-    });
-
-    for(auto it = segs.begin(); it != segs.end(); it++) {
-        std::tie(l, r, i) = *it;
-        st.update(r, r, 1);
-    }
-
-    for(auto it = segs.begin(); it != segs.end(); it++) {
-        std::tie(l, r, i) = *it;
-        res.at(i) = st.query_sum(l, r) - 1;
-        st.update(r, r, -1);
-    }
-
-    for(auto it = res.begin(); it != res.end(); it++)
-        std::cout << *it << std::endl;
+  return tokens;
 }
 
-int main() {
-    int64_t n, f, s;
-    std::cin >> n;
-    std::vector<pair<int64_t>> segs(n);
-    std::vector<int64_t> elems;
-    elems.reserve(n*2);
-    for(int64_t i = 0; i < n; i++) {
-        std::cin >> f >> s;
-        segs.at(i) = pair<int64_t>(f, s, i);
-        elems.push_back(f);
-        elems.push_back(s);
-    }
-    nested_segments(segs, elems);
+using stmonoid = monoid<int64_t, add<int64_t>>;
+using stsemiring = semiring<int64_t, min<int64_t>, add<int64_t>>;
 
-    return 0;
+int main() {
+    int64_t n, m;
+    std::cin >> n;
+    std::vector<int64_t> vec(n);
+
+    for(int64_t i = 0; i < n; i++)
+        std::cin >> vec.at(i);
+
+    segment_tree<stsemiring> st(vec);
+
+    std::cin >> m;
+    std::string op;
+    std::getline(std::cin, op);
+
+    for(int64_t i = 0; i < m; i++) {
+      std::getline(std::cin, op);
+      auto ops = (split(op, ' '));
+      if(ops.size() == 2)
+        std::cout << st.query_sum(std::stol(ops.at(0)), std::stol(ops.at(1))) << std::endl;
+      else
+        st.update(std::stol(ops.at(0)), std::stol(ops.at(1)), std::stol(ops.at(2)));
+    }
 }
