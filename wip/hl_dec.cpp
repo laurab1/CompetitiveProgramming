@@ -143,6 +143,8 @@ class Node {
 
     Node(T v, int64_t lbl) : val(v), label(lbl) {}
 
+    Node() {}
+
     static void swap(Node<T> u, Node<T> v) {
         T tmp = u.val;
         int64_t lbl = u.label;
@@ -157,9 +159,9 @@ template <typename Tm>
 class Graph {
 
     private:
-    std::vector<Node<typename Tm::mtype>> nodes;
 
     public:
+    std::vector<Node<typename Tm::mtype>> nodes;
     using vtype = typename Tm::mtype;
     std::vector<std::vector<int64_t>> graph;
     int64_t size;
@@ -168,18 +170,29 @@ class Graph {
 
     //build a graph from a vector of edges
     Graph(int64_t size, std::vector<std::pair<int64_t, int64_t>> es) : size(size), graph(size), nodes(size, Node<vtype>(Tm::inv(1), -1)) {
+        int64_t nds = 0;
         for(int64_t i = 0; i < es.size(); i++) {
             int64_t idx1 = es.at(i).first;
             int64_t idx2 = es.at(i).second;
-            if(nodes.at(idx1).label == -1)
+            if(nodes.at(idx1).label == -1) {
                 nodes.at(idx1).label = idx1;
-            if(nodes.at(idx2).label == -1)
+                nds++;
+            }
+            if(nodes.at(idx2).label == -1) {
                 nodes.at(idx2).label = idx2;
-            std::cout << "building" << std::endl;
+                nds++;
+            }
             graph.at(idx1).push_back(es.at(i).second);
-            graph.at(idx2).push_back(es.at(i).first);
+            //graph.at(idx2).push_back(es.at(i).first);
         }
-        std::cout << "graph created" << std::endl;
+        this->size = nds;
+        std::cout << "Done" << std::endl;
+        for(int64_t i = 0; i < graph.size(); i++) {
+            for(auto u : graph.at(i))
+                std::cout << u << std::endl;
+        }
+        nodes.resize(this->size);
+        graph.resize(this->size);
     }
 
     Graph(std::vector<Node<vtype>> nds) {
@@ -207,9 +220,10 @@ class HeavyLight {
     int64_t dfs(Graph<Tm>& graph, int64_t v) {
         int64_t size = 1;
         int64_t max_subtree = 0;
-        for(int64_t u : graph.graph.at(v))
+        for(int64_t u : graph.graph.at(v)) {
             if(u != parent.at(v).label) {
                 parent.at(u).label = v;
+                std::cout << "Parent " << u << "is " << parent.at(u).label << std::endl;
                 depth.at(u) = depth.at(v) + 1;
                 int64_t subtree = dfs(graph, u);
                 if(subtree > max_subtree) {
@@ -218,6 +232,7 @@ class HeavyLight {
                 }
                 size += subtree;
             }
+        }
         return size;
     }
 
@@ -225,21 +240,20 @@ class HeavyLight {
     void process_path(Node<vtype> u, Node<vtype> v, ModOp op) {
         int64_t l1 = u.label;
         int64_t l2 = v.label;
-        std::cout << "process path" << std::endl;
         while(root.at(l1).label != root.at(l2).label) {
+            //std::cout << "while" << std::endl;
             if(depth.at(root.at(l1).label) > depth.at(root.at(l2).label)){
                 Node<vtype>::swap(u, v);
                 std::swap(l1, l2);
             }
-            op(treePos.at(root.at(l2).label), treePos.at(l2) + 1);
+            op(treePos.at(root.at(l2).label), treePos.at(l2));
             v = parent.at(root.at(l2).label);
         }
-        std::cout << "endwhl" << std::endl;
         if(depth.at(l1) > depth.at(l2)) {
             Node<vtype>::swap(u, v);
             std::swap(l1, l2);
         }
-        op(treePos.at(l1), treePos.at(l2) + 1);
+        op(treePos.at(l1), treePos.at(l2));
     }
 
     public:
@@ -247,37 +261,36 @@ class HeavyLight {
                                   parent(graph.size, Node<vtype>(Tm::inv(1), -1)),
                                   heavy(graph.size, Node<vtype>(Tm::inv(1), -1)),
                                   depth(graph.size, 0),
-                                  root(graph.size, Node<vtype>(Tm::inv(1), -1)),
+                                  root(graph.size, Node<vtype>(Tm::inv(1), 0)),
                                   treePos(graph.size, 0) {
         dfs(graph, 0);
-        for(int64_t i = 0, curr = 0; i < graph.size; i++) 
-            if(parent.at(i).label == -1 || heavy.at(parent.at(i).label).label != i)
+        for(int64_t i = 0, curr = 0; i < graph.size; i++)  {
+            std::cout << "building" << std::endl;
+            if(parent.at(i).label == -1 or heavy.at(parent.at(i).label).label != i)
                 for(int64_t j = i; j != -1; j = heavy.at(j).label) {
-                    root.at(j).label = i;
+                    if(j != i)
+                        root.at(j).label = graph.nodes.at(i).label;
+                    std::cout << j << " " << root.at(j).label << std::endl;
                     treePos.at(j) = curr++;
                 }
+        }
     }
 
-    void set(int64_t v, vtype& val) {
+    void set(int64_t v, vtype val) {
         stree.update(v, val);
-    }
-
-    void modify_path(Node<vtype> u, Node<vtype> v, const vtype& val) {
-        process_path(u, v, [this, &val](int64_t left, int64_t right) {
-            stree.update(left, right, val);
-        });
     }
 
     vtype query_path(Node<vtype> u, Node<vtype> v) {
         vtype res = Tm::munit();
-        std::cout << "query path" << std::endl;
         process_path(u, v, [this, &res](int64_t left, int64_t right) {
-            Tm::madd(res, stree.query_sum(left, right));
+            res = Tm::madd(res, stree.query_sum(left, right));
         });
+        return res;
     }
 };
 
 using stgroup = group<int64_t, sub<int64_t>, add<int64_t>>;
+using query = std::pair<std::string, std::pair<int64_t, int64_t>>;
 
 int main() {
     int64_t t, n;
@@ -292,30 +305,30 @@ int main() {
             es.at(j).first = f - 1;
             es.at(j).second = s - 1;
         }
-        Graph<stgroup> graph(n+1, es);
-        std::cout << "first loop" << std::endl;
+        Graph<stgroup> graph(n, es);
         HeavyLight<stgroup> path_tree(graph);
         for(int64_t i = 0; i < es.size(); i++) {
             path_tree.set(i+1, costs.at(i));
         }
-        std::cout << "blah" << std::endl;
-        std::string query = "";
+        std::string q;
         int64_t a, b;
-        std::cin >> query;
-        std::cin >> a >> b;
-        if(query.compare("CHANGE") == 0) {
-            std::cout << "set1" << std::endl;
-            path_tree.set(a+1, b);
-            std::cout << "set2" << std::endl;
-        }
-        else {
-            if(query.compare("QUERY") == 0) {
-                std::cout << "query1" << std::endl;
-                std::cout << path_tree.query_path(Node<int64_t>(a, a), Node<int64_t>(b, b));
-                std::cout << "query2" << std::endl;
+        while(true) {
+            std::cin >> q;
+            if(!q.compare("DONE"))
+                return 0;
+            std::cin >> a >> b;
+            if(!q.compare("CHANGE")) {
+                path_tree.set(a - 1, b - 1);
+            }
+            else {
+                if(!q.compare("QUERY")) {
+                    std::cout << path_tree.query_path(Node<int64_t>(a - 1, a - 1), 
+                                                      Node<int64_t>(b - 1, b - 1)) 
+                                                      << std::endl;
+                }
             }
         }
-        std::cout << std::endl;
+        
     }
     return 0;
 }
