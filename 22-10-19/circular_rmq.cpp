@@ -3,6 +3,7 @@
 #include <cmath>
 #include <sstream>
 #include <string>
+#include <climits>
 #include <algorithm>
 
 template <typename T>
@@ -25,7 +26,7 @@ template<>
 const int64_t Unit<int64_t, add<int64_t>>::empty(0);
 
 template<>
-const int64_t Unit<int64_t, min<int64_t>>::empty(__LONG_LONG_MAX__);
+const int64_t Unit<int64_t, min<int64_t>>::empty(LLONG_MAX);
 
 template<typename T, T msum(T const&, T const&), T unit = Unit<T, msum>::empty>
 class monoid {
@@ -62,7 +63,8 @@ class segment_tree {
     std::vector<vtype> lazy;
     int64_t in_size;
 
-    void build_stree(std::vector<vtype> v, int64_t idx, int64_t l, int64_t r) {
+    void build_stree(std::vector<vtype> &v, int64_t idx, int64_t l, int64_t r) {
+        if(l > r) return;
         if(l == r)  {
             st.at(idx) = v.at(l);
             return;
@@ -76,28 +78,21 @@ class segment_tree {
     }
 
     void update_aux(int64_t start, int64_t end, int64_t ustart, int64_t uend, vtype val, int64_t seg_idx) {
-        if(start > end or start > uend or end < ustart or seg_idx >= st.size())
-            return;
-
         int64_t lch = seg_idx*2+1;
         int64_t rch  = seg_idx*2+2;
-        if(lazy.at(seg_idx) != Tm::runit()) {
-            vtype toadd = lazy.at(seg_idx);
-            for(int64_t i = 1; i < start - end + 1; i++)
-                toadd = Tm::madd(toadd, lazy.at(seg_idx));
-            st.at(seg_idx) = Tm::madd(st.at(seg_idx), toadd);
+        if(lazy.at(seg_idx) != Tm::munit()) {
+            st.at(seg_idx) = Tm::madd(st.at(seg_idx), lazy.at(seg_idx));
             if(start != end) {
-                lazy.at(lch) = Tm::madd(Tm::runit(), lazy.at(seg_idx));
-                lazy.at(rch) = Tm::madd(Tm::runit(), lazy.at(seg_idx));
+                lazy.at(lch) = Tm::madd(lazy.at(lch), lazy.at(seg_idx));
+                lazy.at(rch) = Tm::madd(lazy.at(rch), lazy.at(seg_idx));
             }
-            lazy.at(seg_idx) = Tm::runit();
+            lazy.at(seg_idx) = Tm::munit();
         }
+        if(start > end or start > uend or end < ustart)
+            return;
 
         if(start >= ustart and end <= uend) {
-            vtype toadd = val;
-            for(int64_t i = 1; i < start - end + 1; i++)
-                toadd = Tm::madd(toadd, val);
-            st.at(seg_idx) = Tm::madd(st.at(seg_idx), toadd);
+            st.at(seg_idx) = Tm::madd(st.at(seg_idx), val);
             if(start != end) {
                 lazy.at(lch) = Tm::madd(lazy.at(lch), val);
                 lazy.at(rch) = Tm::madd(lazy.at(rch), val);
@@ -116,27 +111,25 @@ class segment_tree {
         int64_t lch = seg_idx*2+1;
         int64_t rch = seg_idx*2+2;
 
-        if(lazy.at(seg_idx) != Tm::runit()) {
-            vtype toadd = lazy.at(seg_idx);
-            for(int64_t i = 1; i < start - end + 1; i++)
-                toadd = Tm::madd(toadd, lazy.at(seg_idx));
-            st.at(seg_idx) = Tm::madd(st.at(seg_idx), toadd);
+        if(lazy.at(seg_idx) != Tm::munit()) {
+            st.at(seg_idx) = Tm::madd(st.at(seg_idx), lazy.at(seg_idx));
             if(start != end) {
-                lazy.at(lch) = Tm::madd(Tm::runit(), lazy.at(seg_idx));
-                lazy.at(rch) = Tm::madd(Tm::runit(), lazy.at(seg_idx));
+                lazy.at(lch) = Tm::madd(lazy.at(lch), lazy.at(seg_idx));
+                lazy.at(rch) = Tm::madd(lazy.at(rch), lazy.at(seg_idx));
             }
-            lazy.at(seg_idx) = 0;
+            lazy.at(seg_idx) = Tm::munit();
         }
 
         if(qstart <= start and qend >= end)
             return st.at(seg_idx);
 
-        if(end < qstart or start > qend)
+        if(end < qstart or start > qend or start > end)
             return Tm::runit();
 
         int64_t center = start + (end - start)/2;
-
-        return Tm::midem(sum_aux(start, center, qstart, qend, lch), sum_aux(center+1, end, qstart, qend, rch));
+        vtype v1 = sum_aux(start, center, qstart, qend, lch);
+        vtype v2 = sum_aux(center+1, end, qstart, qend, rch);
+        return Tm::midem(v1, v2);
     }
 
     public:
@@ -147,7 +140,7 @@ class segment_tree {
         lazy.resize(max_size);
     }
 
-    segment_tree(std::vector<vtype> v) : in_size(v.size()) {
+    segment_tree(std::vector<vtype> &v) : in_size(v.size()) {
         int64_t size = (int64_t)(ceil(log2(in_size)));
         int64_t max_size = 2*(int64_t)pow(2, size) - 1;
         st.resize(max_size);
@@ -155,18 +148,17 @@ class segment_tree {
         lazy.resize(max_size);
     }
 
-    void print() {
-        for(auto it = st.begin(); it != st.end(); it++)
-            std::cout << *it << std::endl;
-    }
-
     void update(int64_t start, int64_t end, vtype val) {
-        update_aux(0, in_size-1, start, end, val, 0);
+        if(start > end) {
+            update_aux(0, in_size-1, start, in_size - 1, val, 0);
+            update_aux(0, in_size-1, 0, end, val, 0);
+        } else
+            update_aux(0, in_size-1, start, end, val, 0);
     }
 
     vtype query_sum(int64_t start, int64_t end) {
-        if(start < 0 or end >= in_size or start == end)
-            return Tm::munit();
+        if(start > end)
+            return Tm::midem(query_sum(start, in_size - 1), query_sum(0, end));
 
         return sum_aux(0, in_size-1, start, end, 0);
     }
@@ -188,6 +180,9 @@ using stmonoid = monoid<int64_t, add<int64_t>>;
 using stsemiring = semiring<int64_t, min<int64_t>, add<int64_t>>;
 
 int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(0);
+    
     int64_t n, m;
     std::cin >> n;
     std::vector<int64_t> vec(n);
