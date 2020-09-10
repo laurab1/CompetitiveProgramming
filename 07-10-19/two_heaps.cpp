@@ -5,7 +5,7 @@
 #include <utility>
 
 template<typename T, typename Compare>
-T two_heaps(std::vector<std::pair<T,int64_t>> vec, Compare compare) {
+void two_heaps(std::vector<std::pair<T,int64_t>> vec, Compare compare) {
     std::vector<int64_t> heaps(vec.size());
     std::pair<int64_t, int64_t> heaps_dim(0,0);
     int64_t f, s;
