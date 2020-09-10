@@ -62,8 +62,7 @@ int main() {
     }
 
     struct {
-        bool operator()(std::pair<int64_t, int64_t> a, std::pair<int64_t, int64_t> b) const
-        {   
+        bool operator()(std::pair<int64_t, int64_t> a, std::pair<int64_t, int64_t> b) const {   
             return a.first > b.first;
         }   
     } comp;

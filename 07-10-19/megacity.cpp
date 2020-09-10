@@ -28,8 +28,7 @@ ddouble megacity(std::vector<std::tuple<int64_t, int64_t, int64_t>> vec, int64_t
     std::vector<std::pair<ddouble, int64_t>> res(vec.size());
 
     struct {
-        bool operator()(std::pair<ddouble, int64_t> a, std::pair<ddouble, int64_t> b) const
-        {   
+        bool operator()(std::pair<ddouble, int64_t> a, std::pair<ddouble, int64_t> b) const {
             return a.first < b.first;
         }   
     } comp;
